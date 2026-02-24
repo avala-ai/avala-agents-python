@@ -1,6 +1,13 @@
 # avala-agents
 
+[![PyPI version](https://img.shields.io/pypi/v/avala-agents)](https://pypi.org/project/avala-agents/)
+[![Python](https://img.shields.io/pypi/pyversions/avala-agents)](https://pypi.org/project/avala-agents/)
+[![CI](https://github.com/avala-ai/avala-agents-python/actions/workflows/ci.yml/badge.svg)](https://github.com/avala-ai/avala-agents-python/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 Build custom annotation workflow agents for the [Avala](https://avala.ai) platform.
+
+> **Note:** This repository is a read-only mirror. To report bugs or request features, please [open an issue](https://github.com/avala-ai/avala-agents-python/issues). See [CONTRIBUTING.md](CONTRIBUTING.md) for details.
 
 ## Installation
 
