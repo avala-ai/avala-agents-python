@@ -120,9 +120,7 @@ def test_multiple_handlers_can_be_registered() -> None:
 @respx.mock
 def test_register_posts_to_agents_endpoint() -> None:
     """_register() POSTs to /agents/ and stores the returned uid."""
-    route = respx.post(f"{BASE_URL}/agents/").mock(
-        return_value=httpx.Response(201, json=REGISTER_RESPONSE)
-    )
+    route = respx.post(f"{BASE_URL}/agents/").mock(return_value=httpx.Response(201, json=REGISTER_RESPONSE))
     agent = TaskAgent(api_key="avk_test", name="test-agent")
     agent._register()
 
@@ -134,9 +132,7 @@ def test_register_posts_to_agents_endpoint() -> None:
 @respx.mock
 def test_register_is_idempotent() -> None:
     """_register() does not POST again if already registered."""
-    route = respx.post(f"{BASE_URL}/agents/").mock(
-        return_value=httpx.Response(201, json=REGISTER_RESPONSE)
-    )
+    route = respx.post(f"{BASE_URL}/agents/").mock(return_value=httpx.Response(201, json=REGISTER_RESPONSE))
     agent = TaskAgent(api_key="avk_test", name="test-agent")
     agent._register()
     agent._register()
@@ -148,9 +144,7 @@ def test_register_is_idempotent() -> None:
 @respx.mock
 def test_register_raises_on_server_error() -> None:
     """_register() raises AgentRegistrationError on non-2xx response."""
-    respx.post(f"{BASE_URL}/agents/").mock(
-        return_value=httpx.Response(500, json={"detail": "Internal Server Error"})
-    )
+    respx.post(f"{BASE_URL}/agents/").mock(return_value=httpx.Response(500, json={"detail": "Internal Server Error"}))
     agent = TaskAgent(api_key="avk_test")
     with pytest.raises(AgentRegistrationError, match="HTTP 500"):
         agent._register()
@@ -160,9 +154,7 @@ def test_register_raises_on_server_error() -> None:
 @respx.mock
 def test_register_includes_project_when_set() -> None:
     """_register() includes project in the POST body when configured."""
-    route = respx.post(f"{BASE_URL}/agents/").mock(
-        return_value=httpx.Response(201, json=REGISTER_RESPONSE)
-    )
+    route = respx.post(f"{BASE_URL}/agents/").mock(return_value=httpx.Response(201, json=REGISTER_RESPONSE))
     agent = TaskAgent(api_key="avk_test", project="proj-001")
     agent._register()
 
@@ -177,9 +169,7 @@ def test_register_includes_project_when_set() -> None:
 @respx.mock
 def test_register_includes_subscribed_events() -> None:
     """_register() includes the registered event names in the payload."""
-    route = respx.post(f"{BASE_URL}/agents/").mock(
-        return_value=httpx.Response(201, json=REGISTER_RESPONSE)
-    )
+    route = respx.post(f"{BASE_URL}/agents/").mock(return_value=httpx.Response(201, json=REGISTER_RESPONSE))
     agent = TaskAgent(api_key="avk_test")
 
     @agent.on("result.submitted")
@@ -225,9 +215,7 @@ def test_fetch_pending_executions_returns_empty_on_error() -> None:
     agent = TaskAgent(api_key="avk_test")
     agent._agent_uid = AGENT_UID
 
-    respx.get(f"{BASE_URL}/agents/{AGENT_UID}/executions/").mock(
-        return_value=httpx.Response(503, json={})
-    )
+    respx.get(f"{BASE_URL}/agents/{AGENT_UID}/executions/").mock(return_value=httpx.Response(503, json={}))
 
     executions = agent._fetch_pending_executions()
     assert executions == []
@@ -250,9 +238,7 @@ def test_fetch_pending_executions_returns_empty_when_not_registered() -> None:
 @respx.mock
 def test_submit_action_posts_to_agent_actions() -> None:
     """_submit_action() POSTs to /agent-actions/ with correct body."""
-    route = respx.post(f"{BASE_URL}/agent-actions/").mock(
-        return_value=httpx.Response(200, json={"status": "ok"})
-    )
+    route = respx.post(f"{BASE_URL}/agent-actions/").mock(return_value=httpx.Response(200, json={"status": "ok"}))
     exec_uid = PENDING_EXECUTION_RESULT["uid"]
     agent = TaskAgent(api_key="avk_test")
     agent._submit_action(exec_uid, "approve", "Looks good")
@@ -269,9 +255,7 @@ def test_submit_action_posts_to_agent_actions() -> None:
 @respx.mock
 def test_submit_action_omits_reason_when_empty() -> None:
     """_submit_action() omits 'reason' from the payload when empty."""
-    route = respx.post(f"{BASE_URL}/agent-actions/").mock(
-        return_value=httpx.Response(200, json={"status": "ok"})
-    )
+    route = respx.post(f"{BASE_URL}/agent-actions/").mock(return_value=httpx.Response(200, json={"status": "ok"}))
     agent = TaskAgent(api_key="avk_test")
     agent._submit_action(PENDING_EXECUTION_RESULT["uid"], "approve", "")
 
@@ -285,9 +269,7 @@ def test_submit_action_omits_reason_when_empty() -> None:
 @respx.mock
 def test_submit_action_raises_on_server_error() -> None:
     """_submit_action() raises AgentActionError on non-2xx response."""
-    respx.post(f"{BASE_URL}/agent-actions/").mock(
-        return_value=httpx.Response(400, json={"detail": "Bad request"})
-    )
+    respx.post(f"{BASE_URL}/agent-actions/").mock(return_value=httpx.Response(400, json={"detail": "Bad request"}))
     agent = TaskAgent(api_key="avk_test")
     with pytest.raises(AgentActionError, match="HTTP 400"):
         agent._submit_action(PENDING_EXECUTION_RESULT["uid"], "approve", "")
@@ -439,9 +421,7 @@ def test_dispatch_calls_handler_and_does_not_auto_skip() -> None:
 @respx.mock
 def test_dispatch_auto_skips_when_no_handler() -> None:
     """_dispatch() submits 'skip' automatically for unhandled event types."""
-    route = respx.post(f"{BASE_URL}/agent-actions/").mock(
-        return_value=httpx.Response(200, json={"status": "ok"})
-    )
+    route = respx.post(f"{BASE_URL}/agent-actions/").mock(return_value=httpx.Response(200, json={"status": "ok"}))
     agent = TaskAgent(api_key="avk_test")
     # No handlers registered.
     agent._dispatch(PENDING_EXECUTION_RESULT)
@@ -461,18 +441,14 @@ def test_dispatch_auto_skips_when_no_handler() -> None:
 @respx.mock
 def test_run_once_returns_count() -> None:
     """run_once() processes pending executions and returns the count."""
-    respx.post(f"{BASE_URL}/agents/").mock(
-        return_value=httpx.Response(201, json=REGISTER_RESPONSE)
-    )
+    respx.post(f"{BASE_URL}/agents/").mock(return_value=httpx.Response(201, json=REGISTER_RESPONSE))
     respx.get(f"{BASE_URL}/agents/{AGENT_UID}/executions/").mock(
         return_value=httpx.Response(
             200,
             json={"results": [PENDING_EXECUTION_RESULT, PENDING_EXECUTION_TASK]},
         )
     )
-    respx.post(f"{BASE_URL}/agent-actions/").mock(
-        return_value=httpx.Response(200, json={"status": "ok"})
-    )
+    respx.post(f"{BASE_URL}/agent-actions/").mock(return_value=httpx.Response(200, json={"status": "ok"}))
 
     agent = TaskAgent(api_key="avk_test", name="test-agent")
 

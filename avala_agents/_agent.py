@@ -75,14 +75,8 @@ class TaskAgent:
     ) -> None:
         resolved_key = api_key or os.environ.get("AVALA_API_KEY", "")
         if not resolved_key:
-            raise ValueError(
-                "No API key provided. "
-                "Pass api_key= or set the AVALA_API_KEY environment variable."
-            )
-        resolved_url = (
-            base_url
-            or os.environ.get("AVALA_BASE_URL", _DEFAULT_BASE_URL)
-        ).rstrip("/") + "/"
+            raise ValueError("No API key provided. Pass api_key= or set the AVALA_API_KEY environment variable.")
+        resolved_url = (base_url or os.environ.get("AVALA_BASE_URL", _DEFAULT_BASE_URL)).rstrip("/") + "/"
 
         self.name = name
         self._project = project
@@ -127,10 +121,7 @@ class TaskAgent:
                 context.approve()
         """
         if event not in AGENT_EVENTS:
-            raise ValueError(
-                f"Unknown event '{event}'. "
-                f"Supported events: {', '.join(AGENT_EVENTS)}"
-            )
+            raise ValueError(f"Unknown event '{event}'. Supported events: {', '.join(AGENT_EVENTS)}")
 
         def decorator(func: Callable[..., None]) -> Callable[..., None]:
             self._handlers[event] = func
@@ -208,8 +199,7 @@ class TaskAgent:
 
         if not response.is_success:
             raise AgentRegistrationError(
-                f"Failed to register agent '{self.name}': "
-                f"HTTP {response.status_code}",
+                f"Failed to register agent '{self.name}': HTTP {response.status_code}",
                 status_code=response.status_code,
             )
 
@@ -217,8 +207,7 @@ class TaskAgent:
         self._agent_uid = data.get("uid")
         if not self._agent_uid:
             raise AgentRegistrationError(
-                f"Server returned success but no agent UID for '{self.name}'. "
-                f"Response: {data}",
+                f"Server returned success but no agent UID for '{self.name}'. Response: {data}",
             )
         logger.info(
             "Agent '%s' registered (uid=%s).",
@@ -261,9 +250,10 @@ class TaskAgent:
 
         data = response.json()
         if isinstance(data, list):
-            return data
+            return data  # type: ignore[no-any-return]
         if isinstance(data, dict):
-            return data.get("results", [])
+            results: list[dict[str, Any]] = data.get("results", [])
+            return results
         return []
 
     def _dispatch(self, execution: dict[str, Any]) -> None:
@@ -307,9 +297,7 @@ class TaskAgent:
         )
         handler(context)
 
-    def _build_context(
-        self, event: AgentEvent
-    ) -> ResultContext | TaskContext | EventContext:
+    def _build_context(self, event: AgentEvent) -> ResultContext | TaskContext | EventContext:
         """Build the appropriate context object for *event*.
 
         Args:
@@ -375,9 +363,7 @@ class TaskAgent:
             _agent=self,
         )
 
-    def _submit_action(
-        self, execution_uid: str, action: str, reason: str
-    ) -> None:
+    def _submit_action(self, execution_uid: str, action: str, reason: str) -> None:
         """POST an action decision to the server.
 
         Args:
@@ -399,19 +385,16 @@ class TaskAgent:
             response = self._http.post("agent-actions/", json=payload)
         except httpx.TimeoutException as exc:
             raise AgentTimeoutError(
-                f"Timed out while submitting action '{action}' "
-                f"for execution '{execution_uid}': {exc}"
+                f"Timed out while submitting action '{action}' for execution '{execution_uid}': {exc}"
             ) from exc
         except httpx.HTTPError as exc:
             raise AgentActionError(
-                f"Network error while submitting action '{action}' "
-                f"for execution '{execution_uid}': {exc}"
+                f"Network error while submitting action '{action}' for execution '{execution_uid}': {exc}"
             ) from exc
 
         if not response.is_success:
             raise AgentActionError(
-                f"Failed to submit action '{action}' for execution "
-                f"'{execution_uid}': HTTP {response.status_code}",
+                f"Failed to submit action '{action}' for execution '{execution_uid}': HTTP {response.status_code}",
                 status_code=response.status_code,
             )
 

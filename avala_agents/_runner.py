@@ -79,9 +79,7 @@ class PollingRunner:
                 # Submit a skip action so the execution does not stay
                 # stuck in RUNNING until the server-side timeout fires.
                 try:
-                    self._agent._submit_action(
-                        execution_uid, "skip", "handler raised an unhandled exception"
-                    )
+                    self._agent._submit_action(execution_uid, "skip", "handler raised an unhandled exception")
                 except Exception:
                     logger.warning(
                         "Failed to submit skip action for execution '%s'.",
