@@ -248,12 +248,11 @@ class TaskAgent:
             )
             return []
 
-        data = response.json()
+        data: Any = response.json()
         if isinstance(data, list):
-            return data  # type: ignore[no-any-return]
+            return list(data)
         if isinstance(data, dict):
-            results: list[dict[str, Any]] = data.get("results", [])
-            return results
+            return list(data.get("results", []))
         return []
 
     def _dispatch(self, execution: dict[str, Any]) -> None:
