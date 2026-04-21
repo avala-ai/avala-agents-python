@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 import os
 from typing import Any, Callable
+from urllib.parse import urlparse
 
 import httpx
 
@@ -23,6 +24,42 @@ from avala_agents._types import (
 logger = logging.getLogger(__name__)
 
 _DEFAULT_BASE_URL = "https://api.avala.ai/api/v1"
+
+
+def _is_truthy(value: str | None) -> bool:
+    if not value:
+        return False
+    return value.strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _is_safe_localhost(hostname: str | None) -> bool:
+    return hostname in {"localhost", "127.0.0.1", "::1"}
+
+
+def _normalize_base_url(base_url: str) -> str:
+    """Validate and normalize a base URL.
+
+    HTTPS is required unless ``AVALA_ALLOW_INSECURE_BASE_URL`` is set, in
+    which case HTTP is permitted only for localhost. Prevents attacker-
+    controlled env vars from redirecting API-key-bearing traffic to
+    arbitrary hosts.
+    """
+    parsed = urlparse(base_url)
+    if not parsed.scheme or not parsed.netloc:
+        raise ValueError("Invalid base_url: expected a valid URL with scheme and host.")
+
+    allow_insecure = _is_truthy(os.environ.get("AVALA_ALLOW_INSECURE_BASE_URL"))
+    if parsed.scheme != "https":
+        if not allow_insecure:
+            raise ValueError(
+                "Base URL must use HTTPS. Set AVALA_ALLOW_INSECURE_BASE_URL=true only for local development."
+            )
+        if parsed.scheme != "http":
+            raise ValueError("With AVALA_ALLOW_INSECURE_BASE_URL=true, only http://localhost URLs are permitted.")
+        if not _is_safe_localhost(parsed.hostname):
+            raise ValueError("Non-HTTPS base URLs are allowed only for localhost addresses.")
+
+    return base_url.rstrip("/")
 
 
 class TaskAgent:
@@ -76,7 +113,8 @@ class TaskAgent:
         resolved_key = api_key or os.environ.get("AVALA_API_KEY", "")
         if not resolved_key:
             raise ValueError("No API key provided. Pass api_key= or set the AVALA_API_KEY environment variable.")
-        resolved_url = (base_url or os.environ.get("AVALA_BASE_URL", _DEFAULT_BASE_URL)).rstrip("/") + "/"
+        raw_url: str = base_url or os.environ.get("AVALA_BASE_URL") or _DEFAULT_BASE_URL
+        resolved_url = _normalize_base_url(raw_url) + "/"
 
         self.name = name
         self._project = project
@@ -94,6 +132,10 @@ class TaskAgent:
                 "Content-Type": "application/json",
             },
             timeout=30.0,
+            # Explicit — httpx defaults to False, but make the guarantee
+            # visible so a future maintainer can't silently enable redirects
+            # (which would leak X-Avala-Api-Key on cross-host 3xx).
+            follow_redirects=False,
         )
 
     # ------------------------------------------------------------------
