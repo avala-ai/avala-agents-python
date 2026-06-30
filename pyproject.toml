@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "avala-agents"
-version = "0.1.0"
+version = "0.1.1"
 description = "Build custom annotation workflow agents for the Avala platform"
 readme = "README.md"
 license = "MIT"
@@ -18,7 +18,7 @@ dev = ["pytest>=7", "respx>=0.20", "mypy>=1", "ruff>=0.1"]
 
 [project.urls]
 Homepage = "https://avala.ai/docs/integrations/agent-framework"
-Repository = "https://github.com/avala-ai/avala"
+Repository = "https://github.com/avala-ai/avala-agents-python"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
